@@ -17,4 +17,4 @@ Abre `http://localhost:3000`.
 3. Publica el puerto `3000`.
 4. El endpoint de salud es `/health`.
 
-La app lee `cf-connecting-ip`, `x-real-ip`, `x-forwarded-for` y la IP del socket. Esto funciona bien detras de proxies como Coolify/Traefik siempre que reenvien esos headers.
+La app primero lee `cf-connecting-ip`, `x-real-ip`, `x-forwarded-for` y la IP del socket. Si el proxy solo entrega una IP interna, el navegador usa `https://api.ipify.org?format=json` como fallback para mostrar la IPv4 publica real del visitante.

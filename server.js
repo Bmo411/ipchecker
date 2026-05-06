@@ -195,26 +195,38 @@ function sendHtml(res) {
       const status = document.querySelector("#status");
       const refresh = document.querySelector("#refresh");
 
+      const sources = [
+        { url: "/api/ip", label: "IPv4 detectada desde el servidor." },
+        { url: "https://api.ipify.org?format=json", label: "IPv4 detectada desde el navegador." }
+      ];
+
+      function isIpv4(value) {
+        return typeof value === "string" &&
+          /^(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)){3}$/.test(value);
+      }
+
       async function loadIp() {
         ip.textContent = "...";
-        status.textContent = "Detectando desde el servidor...";
+        status.textContent = "Detectando IPv4 publica...";
 
-        try {
-          const response = await fetch("/api/ip", { cache: "no-store" });
-          const data = await response.json();
+        for (const source of sources) {
+          try {
+            const response = await fetch(source.url, { cache: "no-store" });
+            const data = await response.json();
+            const candidate = data.ipv4 || data.ip;
 
-          if (!response.ok || !data.ipv4) {
-            ip.textContent = "No detectada";
-            status.textContent = data.message || "No se encontro una IPv4 publica en esta conexion.";
-            return;
+            if (response.ok && isIpv4(candidate)) {
+              ip.textContent = candidate;
+              status.textContent = source.label;
+              return;
+            }
+          } catch {
+            continue;
           }
-
-          ip.textContent = data.ipv4;
-          status.textContent = "IPv4 detectada correctamente.";
-        } catch {
-          ip.textContent = "Error";
-          status.textContent = "No se pudo consultar la IPv4.";
         }
+
+        ip.textContent = "No detectada";
+        status.textContent = "No se pudo detectar una IPv4 publica para esta conexion.";
       }
 
       refresh.addEventListener("click", loadIp);
